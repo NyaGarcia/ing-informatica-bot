@@ -32,6 +32,14 @@ client.on('ready', () => {
 
 client.on('message', async (e) => {
   console.log(e);
+//Modulo de links
+if (message.content.includes("http") && message.author.id!=762805455491432458) {
+   channel = client.channels.cache.get('762694126151139369');
+
+   const msg_content = new String(message.content);
+    channel.send("Usuario: "+message.member.user.tag+" || Link: "+msg_content); 
+  }
+
   if (
     e.author.id === adminUser &&
     e.content.startsWith(prefix + 'sendrolelist')
