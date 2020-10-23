@@ -7,39 +7,72 @@ const Discord = require('discord.js'),
   prefix = '!',
   token = process.env.DISCORD_TOKEN;
 
-var emojiname = ['KEKW'],
-  rolename = ['AUTÓMATAS, GRAMÁTICAS Y LENGUAJES'];
+const CURSO1 = {
+  '🧲': 'FUNDAMENTOS FÍSICOS DE LA INFORMÁTICA',
+  '🧮': 'FUNDAMENTOS MATEMÁTICOS DE LA INFORMÁTICA',
+  '🧬': 'FUNDAMENTOS DE SISTEMAS DIGITALES',
+  '💻': 'FUNDAMENTOS DE PROGRAMACIÓN',
+  '🧠': 'LÓGICA Y ESTRUCTURAS DISCRETAS',
+  '🗂': 'ESTRATEGIAS DE PROGRAMACIÓN Y ESTRUCTURAS DE DATOS',
+  '📊': 'ESTADÍSTICA',
+  '🔧': 'INGENIERÍA DE COMPUTADORES I',
+  '⌨': 'PROGRAMACIÓN ORIENTADA A OBJETOS',
+  '🤖': 'AUTÓMATAS, GRAMÁTICAS Y LENGUAJES',
+};
+
+const adminUser = 'REPLACE THIS WITH YOUR USER';
+
+let messageCurses = [];
+
+function createMessage() {}
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
-client.on('message', (e) => {
-  if (e.content.startsWith(prefix + 'reaction')) {
-    if (!e.channel.guild) return;
-    for (let o in emojiname) {
-      var n = [e.guild.emojis.find((e) => e.name == emojiname[o])];
-      for (let o in n) e.react(n[o]);
-    }
+client.on('message', async (e) => {
+  console.log(e);
+  if (
+    e.author.id === adminUser &&
+    e.content.startsWith(prefix + 'sendrolelist')
+  ) {
+    let messageText =
+      '**vota!**.\n**Selecciona los emojis que correspondan con tu asignatura del PRIMER CURSO:**\n';
+    Object.entries(CURSO1).forEach(
+      (subject) => (messageText += subject[0] + ' ' + subject[1] + '\n')
+    );
+    const message = await e.channel.send(messageText);
+    messageCurses.push(message);
+    Object.keys(CURSO1).map((subjectEmoji) => {
+      message.react(subjectEmoji);
+    });
   }
 });
 
-client.on('messageReactionAdd', (e, n) => {
-  if (n && !n.bot && e.message.channel.guild)
-    for (let o in emojiname)
-      if (e.emoji.name == emojiname[o]) {
-        let i = e.message.guild.roles.find((e) => e.name == rolename[o]);
-        e.message.guild.member(n).addRole(i).catch(console.error);
-      }
-});
+const filteer = (reaction, user) => {
+  console.log(reaction);
+  console.log('userid', user.id);
+  console.log('authorid', reaction.message.author.id);
 
-client.on('messageReactionRemove', (e, n) => {
-  if (n && !n.bot && e.message.channel.guild)
-    for (let o in emojiname)
-      if (e.emoji.name == emojiname[o]) {
-        let i = e.message.guild.roles.find((e) => e.name == rolename[o]);
-        e.message.guild.member(n).removeRole(i).catch(console.error);
-      }
+  return user.id === reaction.message.author.id;
+};
+
+client.on('messageReactionAdd', async (reaction, user) => {
+  const message = reaction.message;
+  const emoji = reaction.emoji;
+
+  // if (!messageCurses.includes(message.id)) return;
+
+  if (!filteer(reaction, user)) {
+    console.log('emoji: ' + emoji);
+    const roleName = CURSO1[emoji];
+    const userDiscord = await reaction.message.guild.member(user);
+    const role = await message.guild.roles.cache.find(
+      (r) => r.name === roleName
+    );
+
+    userDiscord.roles.add(role);
+  }
 });
 
 client.login(token);
